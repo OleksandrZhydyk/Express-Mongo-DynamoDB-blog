@@ -24,7 +24,7 @@ export const create = async (req, res) => {
 export const getAll = async (req, res) => {
   try {
     const posts = await PostModel.find()
-      .populate({ path: "user", select: ["name", "_id"] })
+      .populate({ path: "user", select: ["name", "avatarUrl"] })
       .exec();
     res.status(200).json(posts);
   } catch (err) {

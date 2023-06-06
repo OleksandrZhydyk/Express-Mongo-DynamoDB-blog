@@ -1,9 +1,21 @@
 version: "3"
 
 services:
+  #   backend:
+  #     build: ./
+  #     container_name: backend
+  #     ports:
+  #       - ${PORT}:${PORT}
+  #     volumes:
+  #       - ./src:/backend/src
+  #     env_file:
+  #       - .env
+  #     depends_on:
+  #       - mongo
+
   mongo:
-    image: mongo:latest
-    container_name: mongo_cont
+    image: mongo:4.4.6
+    container_name: mongo
     restart: always
     ports:
       - 27017:27017
@@ -23,4 +35,4 @@ services:
       - mongo
 
 volumes:
-  mongo_data: { }
+  mongo_data: {}
