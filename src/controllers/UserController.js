@@ -2,23 +2,16 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import UserModel from "../models/user.js";
 import dotenv from "dotenv";
+import { UserDTO } from "../DTOs/index.js";
+import { UserRepo } from "../repositories/index.js";
 
 dotenv.config({ path: "../.env" });
 
 export const register = async (req, res) => {
   try {
-    const password = req.body.password;
-    const salt = await bcrypt.genSalt(10);
-    const pwdhash = await bcrypt.hash(password, salt);
+    const userDTO = new UserDTO.RegisterUserDTO(req.body);
 
-    const doc = new UserModel({
-      email: req.body.email,
-      name: req.body.name,
-      passwordHash: pwdhash,
-      avatarUrl: req.body.avatarUrl,
-    });
-
-    const user = await doc.save();
+    const user = await UserRepo.registerDB(userDTO);
 
     const accessToken = jwt.sign(
       { _id: user._id },
@@ -55,7 +48,8 @@ export const register = async (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.userId);
+    const dto = new UserDTO.GetMeDTO(req.userId);
+    const user = await UserModel.findById(dto);
     if (!user) {
       return res.status(404).json({
         message: "User not found",
@@ -76,7 +70,8 @@ export const getMe = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const user = await UserModel.findOne({ email: req.body.email });
+    const dto = new UserDTO.LoginUserDTO(req.body);
+    const user = await UserModel.findOne(dto);
 
     if (!user) {
       return res.status(401).json({
@@ -139,7 +134,9 @@ export const refresh = async (req, res) => {
 
     const decoded = jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET);
 
-    const user = await UserModel.findById(decoded._id);
+    const dto = new UserDTO.GetMeDTO({ userId: decoded._id });
+
+    const user = await UserRepo.getMeDB(dto);
 
     if (!user) {
       return res.status(403).json({
