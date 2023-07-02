@@ -1,16 +1,10 @@
-import PostModel from "../models/post.js";
+import { PostDTO } from "../DTOs/index.js";
+import { PostRepo } from "../repositories/mongoDB/index.js";
 
 export const create = async (req, res) => {
   try {
-    const doc = new PostModel({
-      title: req.body.title,
-      text: req.body.text,
-      tags: req.body.tags,
-      imageUrl: req.body.imageUrl,
-      user: req.userId,
-    });
-
-    const post = await doc.save();
+    const dto = new PostDTO.CreatePostDTO(req);
+    const post = await PostRepo.createDB(dto);
 
     res.json(post);
   } catch (err) {
@@ -23,9 +17,7 @@ export const create = async (req, res) => {
 
 export const getAll = async (req, res) => {
   try {
-    const posts = await PostModel.find()
-      .populate({ path: "user", select: ["name", "avatarUrl"] })
-      .exec();
+    const posts = await PostRepo.getAllDB();
     res.status(200).json(posts);
   } catch (err) {
     console.log(err);
@@ -33,13 +25,10 @@ export const getAll = async (req, res) => {
 };
 
 export const getOne = async (req, res) => {
-  const postId = req.params.id;
   try {
-    const post = await PostModel.findOneAndUpdate(
-      { _id: postId },
-      { $inc: { viewsCount: 1 } },
-      { new: true }
-    );
+    const dto = new PostDTO.GetOneDeletePostDTO({ postId: req.params.id });
+    const post = await PostRepo.getOneWithLikesDB(dto);
+
     if (!post) {
       return res.status(500).json({
         message: "Post not found",
@@ -55,9 +44,11 @@ export const getOne = async (req, res) => {
 };
 
 export const remove = async (req, res) => {
-  const postId = req.params.id;
   try {
-    const post = await PostModel.findOne({ _id: postId });
+    console.log(req.params.id);
+    const dto = new PostDTO.GetOneDeletePostDTO({ postId: req.params.id });
+    const post = await PostRepo.getOneDB(dto);
+
     if (!post) {
       return res.status(404).json({
         message: "Post not found",
@@ -69,7 +60,7 @@ export const remove = async (req, res) => {
       });
     }
 
-    const result = await PostModel.deleteOne({ _id: postId });
+    const result = await PostRepo.removeOneDB(dto);
 
     if (result.acknowledged) {
       return res.status(200).json({ success: true });
@@ -87,9 +78,10 @@ export const remove = async (req, res) => {
 };
 
 export const update = async (req, res) => {
-  const postId = req.params.id;
   try {
-    const post = await PostModel.findOne({ _id: postId });
+    const dto = new PostDTO.GetOneDeletePostDTO({ postId: req.params.id });
+    const post = await PostRepo.getOneDB(dto);
+
     if (!post) {
       return res.status(404).json({
         message: "Post not found",
@@ -101,16 +93,9 @@ export const update = async (req, res) => {
       });
     }
 
-    const result = await PostModel.updateOne(
-      { _id: postId },
-      {
-        title: req.body.title,
-        text: req.body.text,
-        tags: req.body.tags,
-        imageUrl: req.body.imageUrl,
-        user: req.userId,
-      }
-    );
+    const updateDto = new PostDTO.UpdatePostDTO({ ...req, ...dto });
+    console.log(updateDto);
+    const result = await PostRepo.updateDB(updateDto);
 
     if (result.acknowledged) {
       return res.status(200).json({ success: true });

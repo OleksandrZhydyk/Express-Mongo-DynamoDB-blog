@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import UserModel from "../models/user.js";
 import dotenv from "dotenv";
 import { UserDTO } from "../DTOs/index.js";
-import { UserRepo } from "../repositories/index.js";
+import { UserRepo } from "../repositories/mongoDB/index.js";
 
 dotenv.config({ path: "../.env" });
 

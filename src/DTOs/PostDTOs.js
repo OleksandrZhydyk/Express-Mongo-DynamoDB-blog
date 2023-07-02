@@ -4,7 +4,7 @@ export class GetOneWithLikesPostDTO {
   new;
 
   constructor(data) {
-    this.postId = data.napostIdme;
+    this.postId = data.postId;
     this.viewsCount = 1;
     this.new = true;
   }
@@ -28,10 +28,26 @@ export class UpdatePostDTO {
 
   constructor(data) {
     this.postId = data.postId;
-    this.title = data.title;
-    this.text = data.text;
-    this.tags = data.tags;
-    this.imageUrl = data.imageUrl;
+    this.title = data.body.title;
+    this.text = data.body.text;
+    this.tags = data.body.tags;
+    this.imageUrl = data.body.imageUrl;
+    this.userId = data.userId;
+  }
+}
+
+export class CreatePostDTO {
+  title;
+  text;
+  tags;
+  imageUrl;
+  userId;
+
+  constructor(data) {
+    this.title = data.body.title;
+    this.text = data.body.text;
+    this.tags = data.body.tags;
+    this.imageUrl = data.body.imageUrl;
     this.userId = data.userId;
   }
 }
