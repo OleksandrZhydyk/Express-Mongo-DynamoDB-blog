@@ -1,11 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import UserModel from "../models/user.js";
 import dotenv from "dotenv";
 import { UserDTO } from "../DTOs/index.js";
-import { UserRepo } from "../repositories/mongoDB/index.js";
-
-dotenv.config({ path: "../.env" });
+// import { UserRepo } from "../repositories/mongoDB/index.js";
+import { UserRepo } from "../repositories/dynamoDB/index.js";
 
 export const register = async (req, res) => {
   try {
@@ -14,13 +12,13 @@ export const register = async (req, res) => {
     const user = await UserRepo.registerDB(userDTO);
 
     const accessToken = jwt.sign(
-      { _id: user._id },
+      { _id: user.id },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
     );
 
     const refreshToken = jwt.sign(
-      { _id: user._id },
+      { _id: user.id },
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: process.env.REFRESH_TOKEN_EXPIRE }
     );
@@ -32,10 +30,8 @@ export const register = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    const { passwordHash, ...userData } = user._doc;
-
     res.json({
-      userData,
+      user,
       accessToken,
     });
   } catch (err) {
@@ -48,20 +44,19 @@ export const register = async (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    const dto = new UserDTO.GetMeDTO(req.userId);
-    const user = await UserModel.findById(dto);
+    const dto = new UserDTO.GetMeDTO(req);
+    const user = await UserRepo.getMeDB(dto);
     if (!user) {
       return res.status(404).json({
         message: "User not found",
       });
     }
 
-    const { passwordHash, ...userData } = user._doc;
-
     res.json({
-      userData,
+      user,
     });
   } catch (err) {
+    console.log(err);
     res.status(500).json({
       message: "Server failed",
     });
@@ -71,7 +66,7 @@ export const getMe = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const dto = new UserDTO.LoginUserDTO(req.body);
-    const user = await UserModel.findOne(dto);
+    const user = await UserRepo.loginDB(dto);
 
     if (!user) {
       return res.status(401).json({
@@ -81,7 +76,7 @@ export const login = async (req, res) => {
 
     const isValidPass = await bcrypt.compare(
       req.body.password,
-      user._doc.passwordHash
+      user.passwordHash
     );
 
     if (!isValidPass) {
@@ -91,18 +86,18 @@ export const login = async (req, res) => {
     }
 
     const accessToken = jwt.sign(
-      { _id: user._id },
+      { _id: user.id },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
     );
 
     const refreshToken = jwt.sign(
-      { _id: user._id },
+      { _id: user.id },
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: process.env.REFRESH_TOKEN_EXPIRE }
     );
 
-    const { passwordHash, ...userData } = user._doc;
+    const { passwordHash, ...userData } = user;
 
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
@@ -145,7 +140,7 @@ export const refresh = async (req, res) => {
     }
 
     const accessToken = jwt.sign(
-      { _id: user._id },
+      { _id: user.id },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
     );

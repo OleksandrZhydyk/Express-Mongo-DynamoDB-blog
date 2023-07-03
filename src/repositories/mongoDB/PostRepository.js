@@ -1,4 +1,5 @@
-import PostModel from "../../models/post.js";
+import PostModel from "../../models/mongoModels/post.js";
+import { PostDTO } from "../../DTOs/index.js";
 
 export const createDB = async (dto) => {
   const doc = new PostModel({
@@ -9,13 +10,22 @@ export const createDB = async (dto) => {
     user: dto.userId,
   });
 
-  return await doc.save();
+  const post = await doc.save();
+  return new PostDTO.GetPostOutputDTO(post);
 };
 
 export const getAllDB = async () => {
-  return await PostModel.find()
+  const posts = await PostModel.find()
     .populate({ path: "user", select: ["name", "avatarUrl"] })
     .exec();
+
+  function preparePost(post) {
+    const { user, ...postData } = post._doc;
+    const userId = user._id.valueOf();
+    return new PostDTO.GetPostOutputDTO({ user: userId, ...postData });
+  }
+
+  return posts.map((item) => preparePost(item));
 };
 
 export const getOneWithLikesDB = async (dto) => {
@@ -27,11 +37,15 @@ export const getOneWithLikesDB = async (dto) => {
 };
 
 export const getOneDB = async (dto) => {
-  return await PostModel.findById(dto.postId);
+  const post = await PostModel.findById(dto.postId);
+  const { user, ...postData } = post._doc;
+  const userId = user._id.valueOf();
+  return new PostDTO.GetPostOutputDTO({ user: userId, ...postData });
 };
 
 export const removeOneDB = async (dto) => {
-  return await PostModel.deleteOne({ _id: dto.postId });
+  const result = await PostModel.deleteOne({ _id: dto.postId });
+  return result.acknowledged;
 };
 
 export const updateDB = async (dto) => {

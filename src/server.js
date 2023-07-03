@@ -16,8 +16,26 @@ import connectDB from "./config/dbConnection.js";
 import cookieParser from "cookie-parser";
 import corsOptions from "./config/corsOptions.js";
 import cookieSession from "cookie-session";
+import awsconfig from "./config/dynamoConfig.js";
+import { CreateTableCommand } from "@aws-sdk/client-dynamodb";
+import { userTable, postTable } from "./models/dynamoModels/index.js";
 
-connectDB();
+// (async () => {
+//   try {
+//     const userdata = await awsconfig.dnmClient.send(
+//       new CreateTableCommand(userTable)
+//     );
+//     console.log("Success", userdata);
+//     const postdata = await awsconfig.dnmClient.send(
+//       new CreateTableCommand(postTable)
+//     );
+//     console.log("Success", postdata);
+//   } catch (err) {
+//     console.log("Error", err);
+//   }
+// })();
+
+// connectDB();
 
 const app = express();
 
@@ -82,13 +100,21 @@ app.post("/upload", checkAuth, upload.single("image"), (req, res) => {
   });
 });
 
-mongoose.connection.once("open", () => {
-  console.log("DB CONNECTED SUCCESSFULLY");
-  app.listen(process.env.PORT, (err) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    console.log("Server started on port: 4444");
-  });
+app.listen(process.env.PORT, (err) => {
+  if (err) {
+    console.log(err);
+    return;
+  }
+  console.log("Server started on port: 4444");
 });
+
+// mongoose.connection.once("open", () => {
+//   console.log("DB CONNECTED SUCCESSFULLY");
+//   app.listen(process.env.PORT, (err) => {
+//     if (err) {
+//       console.log(err);
+//       return;
+//     }
+//     console.log("Server started on port: 4444");
+//   });
+// });

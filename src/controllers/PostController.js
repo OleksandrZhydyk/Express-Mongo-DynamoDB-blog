@@ -1,5 +1,6 @@
 import { PostDTO } from "../DTOs/index.js";
-import { PostRepo } from "../repositories/mongoDB/index.js";
+// import { PostRepo } from "../repositories/mongoDB/index.js";
+import { PostRepo } from "../repositories/dynamoDB/index.js";
 
 export const create = async (req, res) => {
   try {
@@ -45,7 +46,6 @@ export const getOne = async (req, res) => {
 
 export const remove = async (req, res) => {
   try {
-    console.log(req.params.id);
     const dto = new PostDTO.GetOneDeletePostDTO({ postId: req.params.id });
     const post = await PostRepo.getOneDB(dto);
 
@@ -54,15 +54,15 @@ export const remove = async (req, res) => {
         message: "Post not found",
       });
     }
-    if (req.userId !== post.user._id.valueOf()) {
+    if (req.userId !== post.user) {
       return res.status(403).json({
         message: "Delete Forbidden",
       });
     }
 
-    const result = await PostRepo.removeOneDB(dto);
+    const result = await PostRepo.removeOneDB({ postId: post.id });
 
-    if (result.acknowledged) {
+    if (result) {
       return res.status(200).json({ success: true });
     }
 
@@ -87,17 +87,16 @@ export const update = async (req, res) => {
         message: "Post not found",
       });
     }
-    if (req.userId !== post.user._id.valueOf()) {
+    if (req.userId !== post.user) {
       return res.status(403).json({
         message: "Editing Forbidden",
       });
     }
 
     const updateDto = new PostDTO.UpdatePostDTO({ ...req, ...dto });
-    console.log(updateDto);
     const result = await PostRepo.updateDB(updateDto);
 
-    if (result.acknowledged) {
+    if (result) {
       return res.status(200).json({ success: true });
     }
 

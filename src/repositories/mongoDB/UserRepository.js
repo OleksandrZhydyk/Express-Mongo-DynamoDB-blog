@@ -1,6 +1,7 @@
-import UserModel from "../../models/user.js";
+import UserModel from "../../models/mongoModels/user.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
+import { UserDTO } from "../../DTOs/index.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -15,17 +16,19 @@ export const registerDB = async (dto) => {
     avatarUrl: dto.avatarUrl,
   });
 
-  return await doc.save();
+  const user = await doc.save();
+  const { passwordHash, ...userData } = user._doc;
+  return new UserDTO.RegisterGetMeUserOutputDTO(userData);
 };
 
 export const getMeDB = async (dto) => {
-  return await UserModel.findById(dto.userId);
+  const user = await UserModel.findById(dto.userId);
+  const { passwordHash, ...userData } = user._doc;
+  return new UserDTO.RegisterGetMeUserOutputDTO(userData);
 };
 
 export const loginDB = async (dto) => {
-  return await UserModel.findOne({ email: dto.email });
+  const user = await UserModel.findOne({ email: dto.email });
+  console.log(user);
+  return new UserDTO.LoginChecksDTO(user);
 };
-
-// export const refreshDB = async (dto) => {
-//   return await UserModel.findById(dto.userId);
-// };
