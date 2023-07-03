@@ -70,7 +70,6 @@ export const getOneWithLikesDB = async (dto) => {
   };
 
   const response = await awsconfig.dnmClient.send(new GetItemCommand(getPost));
-  console.log(response);
 
   if (response && response.$metadata.httpStatusCode === 200) {
     return new PostDTO.GetPostOutputDTO(unmarshall(response.Item));
