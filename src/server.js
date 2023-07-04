@@ -12,13 +12,13 @@ import {
   setCredentials,
 } from "./middleware/index.js";
 import { UserController, PostController } from "./controllers/index.js";
-import connectDB from "./config/dbConnection.js";
 import cookieParser from "cookie-parser";
 import corsOptions from "./config/corsOptions.js";
 import cookieSession from "cookie-session";
 import awsconfig from "./config/dynamoConfig.js";
 import { CreateTableCommand } from "@aws-sdk/client-dynamodb";
 import { userTable, postTable } from "./models/dynamoModels/index.js";
+import { mongoConnect } from "./config/dbConnection.js";
 
 // (async () => {
 //   try {
@@ -35,7 +35,7 @@ import { userTable, postTable } from "./models/dynamoModels/index.js";
 //   }
 // })();
 
-// connectDB();
+// mongoConnect();
 
 const app = express();
 
